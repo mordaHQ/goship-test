@@ -1,2 +1,14 @@
-FROM nginx:alpine
-COPY index.html /usr/share/nginx/html/index.html
+# 1. Берем базовый образ Go (в нем уже есть компилятор)
+FROM golang:alpine
+
+# 2. Создаем папку /app внутри контейнера
+WORKDIR /app
+
+# 3. Копируем наш файл main.go внутрь
+COPY main.go .
+
+# 4. КОМПИЛИРУЕМ! (Превращаем текст в файл server)
+RUN go build -o server main.go
+
+# 5. Говорим, что при запуске контейнера надо включить эту программу
+CMD ["./server"]
