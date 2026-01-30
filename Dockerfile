@@ -1,14 +1,17 @@
-# 1. Берем базовый образ Go (в нем уже есть компилятор)
-FROM golang:alpine
-
-# 2. Создаем папку /app внутри контейнера
+# ЭТАП 1: Сборщик (Builder)
+# Берем тяжелый образ с Go, чтобы скомпилировать
+FROM golang:alpine AS builder
 WORKDIR /app
-
-# 3. Копируем наш файл main.go внутрь
 COPY main.go .
-
-# 4. КОМПИЛИРУЕМ! (Превращаем текст в файл server)
 RUN go build -o server main.go
 
-# 5. Говорим, что при запуске контейнера надо включить эту программу
+# ЭТАП 2: Финальный образ (Runner)
+# Берем крошечный Alpine Linux (без Go, без мусора)
+FROM alpine:latest
+WORKDIR /root/
+
+# Копируем ТОЛЬКО готовый файл из первого этапа
+COPY --from=builder /app/server .
+
+# Запускаем
 CMD ["./server"]
