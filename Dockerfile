@@ -1,17 +1,22 @@
-# ЭТАП 1: Сборщик (Builder)
-# Берем тяжелый образ с Go, чтобы скомпилировать
 FROM golang:alpine AS builder
 WORKDIR /app
+
+# Нужно для работы SQLite на Alpine
+ENV CGO_ENABLED=0 
+
+# Инициализируем модуль и качаем зависимости
 COPY main.go .
+RUN go mod init goship-app
+RUN go get modernc.org/sqlite
+RUN go mod tidy
+
+# Компилируем
 RUN go build -o server main.go
 
-# ЭТАП 2: Финальный образ (Runner)
-# Берем крошечный Alpine Linux (без Go, без мусора)
 FROM alpine:latest
 WORKDIR /root/
-
-# Копируем ТОЛЬКО готовый файл из первого этапа
+# Копируем сервер и html
 COPY --from=builder /app/server .
+COPY index.html .
 
-# Запускаем
 CMD ["./server"]
